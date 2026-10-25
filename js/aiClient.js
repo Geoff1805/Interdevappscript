@@ -7,6 +7,7 @@ export class AiClient {
 	constructor() {
 		this.apiKeyStorageKey = "interdev_gemini_api_key";
 		this.modelStorageKey = "interdev_gemini_model";
+		this.cachedModelsKey = "interdev_gemini_cached_models";
 		this.defaultModel = "gemini-2.5-flash";
 	}
 
@@ -30,6 +31,74 @@ export class AiClient {
 		if (model) {
 			localStorage.setItem(this.modelStorageKey, model);
 		}
+	}
+
+	getCachedModels() {
+		try {
+			const raw = localStorage.getItem(this.cachedModelsKey);
+			return raw ? JSON.parse(raw) : null;
+		} catch {
+			return null;
+		}
+	}
+
+	/**
+	 * Récupère dynamiquement la liste des modèles disponibles auprès de Google AI Studio
+	 */
+	async fetchAvailableModels(apiKey = null) {
+		const key = apiKey || this.getApiKey();
+		if (!key) {
+			throw new Error(
+				"Clé API Google Gemini requise pour récupérer les modèles.",
+			);
+		}
+
+		const endpoint = `https://generativelanguage.googleapis.com/v1beta/models?key=${key}`;
+		const response = await fetch(endpoint);
+		if (!response.ok) {
+			const err = await response.json().catch(() => ({}));
+			throw new Error(
+				err.error?.message ||
+					`Erreur ${response.status} lors de la récupération des modèles Gemini.`,
+			);
+		}
+
+		const data = await response.json();
+		const rawModels = data.models || [];
+
+		// Filtrer uniquement les modèles capables de génération de contenu
+		const textModels = rawModels
+			.filter((m) => m.supportedGenerationMethods?.includes("generateContent"))
+			.map((m) => {
+				const cleanId = m.name.replace(/^models\//, "");
+				return {
+					id: cleanId,
+					name: m.displayName || cleanId,
+					description: m.description || "",
+					inputTokenLimit: m.inputTokenLimit,
+					outputTokenLimit: m.outputTokenLimit,
+				};
+			});
+
+		// Trier par pertinence (les plus récents 2.5 / 2.0 / 1.5 en tête)
+		textModels.sort((a, b) => {
+			const score = (id) => {
+				if (id.includes("2.5-flash")) return 100;
+				if (id.includes("2.5-pro")) return 90;
+				if (id.includes("2.0-flash")) return 80;
+				if (id.includes("2.0-pro")) return 70;
+				if (id.includes("1.5-flash")) return 60;
+				if (id.includes("1.5-pro")) return 50;
+				return 10;
+			};
+			return score(b.id) - score(a.id);
+		});
+
+		if (textModels.length > 0) {
+			localStorage.setItem(this.cachedModelsKey, JSON.stringify(textModels));
+		}
+
+		return textModels;
 	}
 
 	getSystemInstruction() {

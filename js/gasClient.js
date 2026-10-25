@@ -178,4 +178,54 @@ export class GasClient {
 
 		return await response.json();
 	}
+
+	/**
+	 * Liste l'ensemble des scripts Google Apps Script de l'utilisateur via Google Drive API
+	 */
+	async listUserProjects(accessToken) {
+		if (!accessToken) {
+			throw new Error("Token d'accès Google requis pour lister les scripts.");
+		}
+
+		const query = encodeURIComponent(
+			"mimeType = 'application/vnd.google-apps.script' and trashed = false",
+		);
+		const fields = encodeURIComponent(
+			"files(id, name, modifiedTime, createdTime, owners)",
+		);
+		const url = `https://www.googleapis.com/drive/v3/files?q=${query}&fields=${fields}&orderBy=modifiedTime%20desc&pageSize=100`;
+
+		const response = await fetch(url, {
+			method: "GET",
+			headers: {
+				Authorization: `Bearer ${accessToken}`,
+				"Content-Type": "application/json",
+			},
+		});
+
+		if (!response.ok) {
+			const err = await response.json().catch(() => ({}));
+			const msg = err.error?.message || "";
+			if (
+				response.status === 403 &&
+				(msg.includes("Google Drive API") ||
+					msg.includes("Access Not Configured"))
+			) {
+				throw new Error(
+					"L'API Google Drive doit être activée sur votre projet Google Cloud pour lister vos scripts automatiquement. Activez-la dans Google Cloud Console (APIs & Services > Library > Google Drive API).",
+				);
+			}
+			throw new Error(
+				msg || `Erreur ${response.status} lors de la recherche des scripts.`,
+			);
+		}
+
+		const data = await response.json();
+		return (data.files || []).map((file) => ({
+			id: file.id,
+			title: file.name,
+			modifiedTime: file.modifiedTime,
+			createdTime: file.createdTime,
+		}));
+	}
 }

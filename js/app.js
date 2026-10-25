@@ -16,6 +16,7 @@ class InterdevApp {
 		this.dirtyFiles = new Set();
 		this.scriptId = localStorage.getItem("interdev_script_id") || "";
 		this.projectTitle = "Sans titre";
+		this.userProjects = [];
 		this.autoSyncOnSave = localStorage.getItem("interdev_autosync") !== "false";
 
 		// Templates par défaut
@@ -64,9 +65,17 @@ function lancerNettoyageAutomatique() {
 		this.initMonaco();
 		this.loadInitialFiles();
 		this.updateAuthUI();
+		this.populateGeminiModels(false);
 
-		this.auth.onTokenChange(() => {
+		if (this.auth.isAuthenticated()) {
+			this.loadUserProjects(false);
+		}
+
+		this.auth.onTokenChange((isAuthed) => {
 			this.updateAuthUI();
+			if (isAuthed) {
+				this.loadUserProjects(true);
+			}
 		});
 
 		// Écoute des raccourcis clavier globaux
@@ -79,6 +88,37 @@ function lancerNettoyageAutomatique() {
 	}
 
 	bindDOM() {
+		// Dropdown de projets
+		document
+			.getElementById("btn-project-dropdown")
+			?.addEventListener("click", (e) => {
+				e.stopPropagation();
+				this.toggleProjectDropdown();
+			});
+		document
+			.getElementById("btn-refresh-projects")
+			?.addEventListener("click", (e) => {
+				e.stopPropagation();
+				this.loadUserProjects(true);
+			});
+		document
+			.getElementById("project-search-input")
+			?.addEventListener("input", (e) => this.filterProjects(e.target.value));
+		document
+			.getElementById("btn-open-settings-script")
+			?.addEventListener("click", () => {
+				this.closeProjectDropdown();
+				this.openSettingsModal();
+			});
+
+		// Fermer le dropdown en cliquant à l'extérieur
+		document.addEventListener("click", (e) => {
+			const wrapper = document.querySelector(".project-selector-wrapper");
+			if (wrapper && !wrapper.contains(e.target)) {
+				this.closeProjectDropdown();
+			}
+		});
+
 		// Boutons Header
 		document
 			.getElementById("btn-sync")
@@ -135,6 +175,9 @@ function lancerNettoyageAutomatique() {
 		document
 			.getElementById("btn-test-gemini")
 			.addEventListener("click", () => this.testGeminiConnection());
+		document
+			.getElementById("btn-refresh-models")
+			?.addEventListener("click", () => this.populateGeminiModels(true));
 	}
 
 	initMonaco() {
@@ -643,15 +686,23 @@ function lancerNettoyageAutomatique() {
 
 		this.scriptId = scriptId;
 		localStorage.setItem("interdev_script_id", scriptId);
-		document.getElementById("project-script-id").textContent = scriptId
-			? `${scriptId.slice(0, 10)}...`
-			: "Non configuré";
+
+		const titleEl = document.getElementById("project-title");
+		if (titleEl && scriptId) {
+			titleEl.textContent =
+				this.projectTitle !== "Sans titre"
+					? this.projectTitle
+					: `${scriptId.slice(0, 10)}...`;
+		}
 
 		this.auth.setClientId(clientId);
 		this.auth.setManualToken(manualToken);
 
 		this.ai.setApiKey(geminiKey);
 		this.ai.setModel(geminiModel);
+		if (geminiKey) {
+			this.populateGeminiModels(true);
+		}
 
 		this.autoSyncOnSave = autosync;
 		localStorage.setItem("interdev_autosync", autosync ? "true" : "false");
@@ -675,8 +726,8 @@ function lancerNettoyageAutomatique() {
 			if (inputScriptId) {
 				this.scriptId = inputScriptId;
 				localStorage.setItem("interdev_script_id", inputScriptId);
-				document.getElementById("project-script-id").textContent =
-					`${inputScriptId.slice(0, 10)}...`;
+				const titleEl = document.getElementById("project-title");
+				if (titleEl) titleEl.textContent = `${inputScriptId.slice(0, 10)}...`;
 			}
 			this.auth.login();
 		} catch (e) {
@@ -734,6 +785,179 @@ function lancerNettoyageAutomatique() {
 		document.getElementById("status-file-info").textContent = activeFile
 			? `${activeFile.displayName} (${activeFile.type})`
 			: "--";
+	}
+
+	// --- Gestion dynamique des projets Google Apps Script ---
+	toggleProjectDropdown() {
+		const menu = document.getElementById("project-dropdown-menu");
+		menu?.classList.toggle("hidden");
+		if (!menu?.classList.contains("hidden")) {
+			document.getElementById("project-search-input")?.focus();
+			if (this.auth.isAuthenticated() && this.userProjects.length === 0) {
+				this.loadUserProjects(false);
+			}
+		}
+	}
+
+	closeProjectDropdown() {
+		document.getElementById("project-dropdown-menu")?.classList.add("hidden");
+	}
+
+	async loadUserProjects(forceRefresh = false) {
+		const listContainer = document.getElementById("project-dropdown-list");
+		const token = this.auth.getAccessToken();
+
+		if (!token) {
+			if (listContainer) {
+				listContainer.innerHTML =
+					'<div class="dropdown-empty">Connectez-vous à Google dans Paramètres ⚙️ pour lister automatiquement vos scripts.</div>';
+			}
+			return;
+		}
+
+		// Utiliser le cache si pas forcé
+		if (!forceRefresh) {
+			try {
+				const cached = localStorage.getItem("interdev_user_projects");
+				if (cached) {
+					this.userProjects = JSON.parse(cached);
+					this.renderProjectDropdown(this.userProjects);
+				}
+			} catch {
+				// Ignorer
+			}
+		}
+
+		if (forceRefresh || this.userProjects.length === 0) {
+			if (listContainer) {
+				listContainer.innerHTML =
+					'<div class="dropdown-empty">🔄 Recherche de vos scripts Google Apps Script...</div>';
+			}
+			try {
+				const projects = await this.gas.listUserProjects(token);
+				this.userProjects = projects;
+				localStorage.setItem(
+					"interdev_user_projects",
+					JSON.stringify(projects),
+				);
+				this.renderProjectDropdown(projects);
+				this.showToast(
+					`${projects.length} script(s) Apps Script trouvés`,
+					"info",
+				);
+			} catch (e) {
+				console.error("Erreur listUserProjects:", e);
+				if (listContainer) {
+					listContainer.innerHTML = `<div class="dropdown-empty" style="color: var(--accent-red);">${e.message}</div>`;
+				}
+			}
+		}
+	}
+
+	renderProjectDropdown(projects) {
+		const listContainer = document.getElementById("project-dropdown-list");
+		if (!listContainer) return;
+
+		if (projects.length === 0) {
+			listContainer.innerHTML =
+				'<div class="dropdown-empty">Aucun script autonome trouvé dans votre Google Drive.</div>';
+			return;
+		}
+
+		listContainer.innerHTML = "";
+		projects.forEach((proj) => {
+			const item = document.createElement("div");
+			const isActive = proj.id === this.scriptId;
+			item.className = `project-dropdown-item ${isActive ? "active" : ""}`;
+			item.dataset.id = proj.id;
+
+			const dateStr = proj.modifiedTime
+				? new Date(proj.modifiedTime).toLocaleDateString("fr-FR", {
+						day: "numeric",
+						month: "short",
+						hour: "2-digit",
+						minute: "2-digit",
+					})
+				: "";
+
+			item.innerHTML = `
+        <span class="project-dropdown-item-title" title="${proj.title}">⚡ ${proj.title}</span>
+        <span class="project-dropdown-item-date">${dateStr}</span>
+      `;
+
+			item.addEventListener("click", () => {
+				this.selectProject(proj);
+			});
+
+			listContainer.appendChild(item);
+		});
+	}
+
+	filterProjects(query) {
+		const q = query.trim().toLowerCase();
+		if (!q) {
+			this.renderProjectDropdown(this.userProjects);
+			return;
+		}
+		const filtered = this.userProjects.filter((p) =>
+			p.title.toLowerCase().includes(q),
+		);
+		this.renderProjectDropdown(filtered);
+	}
+
+	selectProject(proj) {
+		this.scriptId = proj.id;
+		this.projectTitle = proj.title;
+		localStorage.setItem("interdev_script_id", proj.id);
+
+		const titleEl = document.getElementById("project-title");
+		if (titleEl) titleEl.textContent = proj.title;
+
+		this.closeProjectDropdown();
+		this.showToast(`Ouverture de ${proj.title}...`, "info");
+		this.fetchProjectFromGas();
+	}
+
+	// --- Gestion dynamique des modèles Gemini (Google AI Studio) ---
+	async populateGeminiModels(forceFetch = false) {
+		const select = document.getElementById("setting-gemini-model");
+		const statusText = document.getElementById("models-status-text");
+		if (!select) return;
+
+		let models = this.ai.getCachedModels();
+		const currentSelected = this.ai.getModel();
+
+		if (forceFetch || !models || models.length === 0) {
+			const key =
+				document.getElementById("setting-gemini-key")?.value.trim() ||
+				this.ai.getApiKey();
+			if (key) {
+				if (statusText)
+					statusText.textContent = "Interrogation de Google AI Studio...";
+				try {
+					models = await this.ai.fetchAvailableModels(key);
+					if (statusText)
+						statusText.textContent = `✅ ${models.length} modèles récupérés avec succès de votre compte.`;
+				} catch (e) {
+					console.warn("Échec récupération dynamique modèles:", e);
+					if (statusText)
+						statusText.textContent = `⚠️ Impossible d'actualiser les modèles : ${e.message}`;
+				}
+			}
+		}
+
+		if (models && models.length > 0) {
+			select.innerHTML = "";
+			models.forEach((m) => {
+				const opt = document.createElement("option");
+				opt.value = m.id;
+				opt.textContent = `${m.name} (${m.id})`;
+				if (m.id === currentSelected) {
+					opt.selected = true;
+				}
+				select.appendChild(opt);
+			});
+		}
 	}
 
 	showToast(message, type = "info") {

@@ -59,7 +59,7 @@ export class AuthManager {
 			this.tokenClient = window.google.accounts.oauth2.initTokenClient({
 				client_id: clientId,
 				scope:
-					"https://www.googleapis.com/auth/script.projects https://www.googleapis.com/auth/script.deployments",
+					"https://www.googleapis.com/auth/script.projects https://www.googleapis.com/auth/script.deployments https://www.googleapis.com/auth/drive.metadata.readonly",
 				prompt: "",
 				callback: (response) => {
 					if (response.error) {
