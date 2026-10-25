@@ -105,17 +105,30 @@ function lancerNettoyageAutomatique() {
 			.getElementById("project-search-input")
 			?.addEventListener("input", (e) => this.filterProjects(e.target.value));
 		document
+			.getElementById("btn-close-project-dropdown")
+			?.addEventListener("click", (e) => {
+				e.stopPropagation();
+				this.closeProjectDropdown();
+			});
+		document
 			.getElementById("btn-open-settings-script")
 			?.addEventListener("click", () => {
 				this.closeProjectDropdown();
 				this.openSettingsModal();
 			});
 
-		// Fermer le dropdown en cliquant à l'extérieur
-		document.addEventListener("click", (e) => {
+		// Fermer le dropdown en cliquant à l'extérieur ou avec Échap
+		document.addEventListener("pointerdown", (e) => {
 			const wrapper = document.querySelector(".project-selector-wrapper");
 			if (wrapper && !wrapper.contains(e.target)) {
 				this.closeProjectDropdown();
+			}
+		});
+
+		window.addEventListener("keydown", (e) => {
+			if (e.key === "Escape") {
+				this.closeProjectDropdown();
+				this.closeSettingsModal();
 			}
 		});
 

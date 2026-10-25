@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Interdevappscript — Universal Google Apps Script & AI Studio</title>
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/style.css?v=1.0.7">
   <!-- Google Identity Services (OAuth2 Client) -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <!-- Monaco Editor AMD Loader -->
@@ -32,6 +32,7 @@
           <div class="project-dropdown-header">
             <input type="text" id="project-search-input" placeholder="🔍 Filtrer vos scripts..." class="project-search-input">
             <button id="btn-refresh-projects" class="btn btn-ghost btn-sm" title="Recharger depuis Google Drive">🔄</button>
+            <button id="btn-close-project-dropdown" class="btn btn-ghost btn-sm" title="Fermer le menu">✕</button>
           </div>
           <div id="project-dropdown-list" class="project-dropdown-list">
             <div class="dropdown-empty">Connectez-vous à Google pour lister vos scripts</div>
@@ -224,6 +225,6 @@
   <div id="toast-container" class="toast-container"></div>
 
   <!-- Main Controller Entrypoint -->
-  <script type="module" src="js/app.js?v=1.0.6"></script>
+  <script type="module" src="js/app.js?v=1.0.7"></script>
 </body>
 </html>

@@ -27,6 +27,10 @@
   padding: 0;
 }
 
+.hidden {
+  display: none !important;
+}
+
 body {
   font-family: var(--font-sans);
   background-color: var(--bg-primary);
@@ -558,7 +562,11 @@ body {
   -webkit-text-fill-color: transparent;
 }
 
-.ai-body {
+.ai-.hidden {
+  display: none !important;
+}
+
+body {
   flex: 1;
   overflow-y: auto;
   padding: 14px;
@@ -755,7 +763,11 @@ body {
   font-weight: 700;
 }
 
-.modal-body {
+.modal-.hidden {
+  display: none !important;
+}
+
+body {
   padding: 20px;
   overflow-y: auto;
   display: flex;
