@@ -8,7 +8,7 @@ export class AiClient {
 		this.apiKeyStorageKey = "interdev_gemini_api_key";
 		this.modelStorageKey = "interdev_gemini_model";
 		this.cachedModelsKey = "interdev_gemini_cached_models";
-		this.defaultModel = "gemini-2.5-flash";
+		this.defaultModel = "gemini-3.8-flash";
 	}
 
 	getApiKey() {
@@ -80,18 +80,15 @@ export class AiClient {
 				};
 			});
 
-		// Trier par pertinence (les plus récents 2.5 / 2.0 / 1.5 en tête)
+		// Trier par version dynamique décroissante (les versions les plus récentes comme 3.8 en tête)
 		textModels.sort((a, b) => {
-			const score = (id) => {
-				if (id.includes("2.5-flash")) return 100;
-				if (id.includes("2.5-pro")) return 90;
-				if (id.includes("2.0-flash")) return 80;
-				if (id.includes("2.0-pro")) return 70;
-				if (id.includes("1.5-flash")) return 60;
-				if (id.includes("1.5-pro")) return 50;
-				return 10;
+			const getScore = (id) => {
+				const match = id.match(/gemini-(\d+(?:\.\d+)?)/);
+				const ver = match ? parseFloat(match[1]) : 0;
+				const isFlash = id.includes("flash") ? 0.05 : 0;
+				return ver + isFlash;
 			};
-			return score(b.id) - score(a.id);
+			return getScore(b.id) - getScore(a.id);
 		});
 
 		if (textModels.length > 0) {

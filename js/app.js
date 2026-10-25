@@ -747,14 +747,18 @@ function lancerNettoyageAutomatique() {
 			alert("Veuillez renseigner votre clé API Gemini.");
 			return;
 		}
+		const selectedModel =
+			document.getElementById("setting-gemini-model")?.value ||
+			"gemini-3.8-flash";
 		const testAi = new AiClient();
 		testAi.setApiKey(key);
+		testAi.setModel(selectedModel);
 
 		try {
 			const res = await testAi.generateCode({
 				prompt: "Réponds simplement 'Connexion Gemini Opérationnelle !'",
 			});
-			alert(`✅ Succès : ${res.rawText}`);
+			alert(`✅ Succès avec ${selectedModel} :\n\n${res.rawText}`);
 		} catch (e) {
 			alert(`❌ Échec : ${e.message}`);
 		}
