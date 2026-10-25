@@ -663,6 +663,21 @@ function lancerNettoyageAutomatique() {
 
 	handleGoogleLogin() {
 		try {
+			const inputClientId = document
+				.getElementById("setting-client-id")
+				?.value.trim();
+			if (inputClientId) {
+				this.auth.setClientId(inputClientId);
+			}
+			const inputScriptId = document
+				.getElementById("setting-script-id")
+				?.value.trim();
+			if (inputScriptId) {
+				this.scriptId = inputScriptId;
+				localStorage.setItem("interdev_script_id", inputScriptId);
+				document.getElementById("project-script-id").textContent =
+					`${inputScriptId.slice(0, 10)}...`;
+			}
 			this.auth.login();
 		} catch (e) {
 			alert(e.message);

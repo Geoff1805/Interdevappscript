@@ -47,11 +47,10 @@ export class AuthManager {
 	 */
 	initGisClient() {
 		const clientId = this.getClientId();
+		if (!clientId) return false;
 		if (
-			!clientId ||
 			typeof window.google === "undefined" ||
-			!window.google.accounts ||
-			!window.google.accounts.oauth2
+			!window.google.accounts?.oauth2
 		) {
 			return false;
 		}
@@ -90,12 +89,24 @@ export class AuthManager {
 	 * Déclenche la popup de connexion Google
 	 */
 	login() {
+		const clientId = this.getClientId();
+		if (!clientId) {
+			throw new Error(
+				"Client ID Google manquant. Veuillez saisir votre Client ID.",
+			);
+		}
+		if (
+			typeof window.google === "undefined" ||
+			!window.google.accounts?.oauth2
+		) {
+			throw new Error(
+				"Le service Google Identity Services n'est pas encore chargé ou est bloqué par votre navigateur.\n\nVérifiez que vous n'avez pas d'extension type bloqueur de pub/scripts (uBlock, Brave Shield) bloquant 'accounts.google.com' sur cette page.",
+			);
+		}
 		if (!this.tokenClient) {
-			const initialized = this.initGisClient();
-			if (!initialized) {
-				throw new Error(
-					"Client ID Google manquant ou SDK Google non initialisé. Configurez votre Client ID dans les Paramètres.",
-				);
+			const ok = this.initGisClient();
+			if (!ok || !this.tokenClient) {
+				throw new Error("Impossible d'initialiser le client Google OAuth.");
 			}
 		}
 		this.tokenClient.requestAccessToken({ prompt: "" });
