@@ -1,13 +1,209 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="fr">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Interdevappscript — Universal AI Studio & Development Hub</title>
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-  </head>
-  <body class="bg-slate-950 text-slate-100 min-h-screen selection:bg-indigo-500 selection:text-white">
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interdevappscript — Universal Google Apps Script & AI Studio</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="stylesheet" href="css/style.css">
+  <!-- Google Identity Services (OAuth2 Client) -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <!-- Monaco Editor AMD Loader -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs/loader.min.js"></script>
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="app-header">
+    <div class="brand">
+      <img src="favicon.svg" alt="Logo" class="brand-icon">
+      <span>Interdevappscript</span>
+      <span class="brand-tag">Studio AI</span>
+    </div>
+
+    <div class="header-center">
+      <div class="project-title-badge">
+        <span id="project-title">Sans titre</span>
+        <span class="id" id="project-script-id">Non configuré</span>
+      </div>
+
+      <div id="sync-status-badge" class="sync-status synced">
+        <span class="dot"></span>
+        <span class="text">Prêt</span>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <button id="btn-refresh" class="btn btn-secondary btn-sm" title="Recharger depuis Google Apps Script">
+        🔄 Recharger
+      </button>
+      <button id="btn-sync" class="btn btn-success btn-sm" title="Pousser vers Google Apps Script (Ctrl+S)">
+        ⚡ Sauvegarder & Sync
+      </button>
+      <button id="btn-ai-toggle" class="btn btn-primary btn-sm" title="Ouvrir l'assistant Gemini">
+        ✨ Assistant IA
+      </button>
+      <button id="btn-settings" class="btn btn-secondary btn-sm" title="Paramètres & Clés API">
+        ⚙️ Paramètres
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Workspace -->
+  <main class="app-workspace">
+    <!-- Sidebar Explorer -->
+    <aside id="sidebar" class="sidebar">
+      <div class="sidebar-header">
+        <span>Fichiers du projet</span>
+        <div class="sidebar-actions">
+          <button id="btn-add-file" class="btn btn-ghost btn-sm" title="Nouveau fichier">+</button>
+          <button id="btn-sidebar-toggle" class="btn btn-ghost btn-sm" title="Replier">◀</button>
+        </div>
+      </div>
+      <ul id="file-list" class="file-list">
+        <!-- Rendu dynamique des fichiers -->
+      </ul>
+    </aside>
+
+    <!-- Editor Container -->
+    <section class="editor-container">
+      <div id="tab-bar" class="tab-bar">
+        <!-- Onglets dynamiques -->
+      </div>
+      <div id="monaco-host"></div>
+    </section>
+
+    <!-- Right AI Assistant Panel -->
+    <aside id="ai-panel" class="ai-panel">
+      <div class="ai-header">
+        <div class="ai-title">
+          <span>✨ Gemini Code Assistant</span>
+        </div>
+        <button id="btn-ai-close" class="btn btn-ghost btn-sm" onclick="document.getElementById('ai-panel').classList.add('collapsed')">✕</button>
+      </div>
+
+      <div class="ai-body">
+        <div class="ai-chips">
+          <button class="chip" data-action="optimize">⚡ Optimiser V8 & Quotas</button>
+          <button class="chip" data-action="audit">🛡️ Audit Timeouts & Quotas</button>
+          <button class="chip" data-action="jsdoc">📖 Générer JSDoc</button>
+          <button class="chip" data-action="trigger">🔄 Créer Déclencheur</button>
+        </div>
+
+        <div class="ai-input-box">
+          <textarea id="ai-input" class="ai-textarea" placeholder="Demandez une fonction, une optimisation, un correctif... (Ctrl+Entrée pour envoyer)"></textarea>
+          <div class="ai-input-actions">
+            <span style="font-size: 0.72rem; color: var(--text-dim);">Google Gemini 2.5 Flash</span>
+            <button id="btn-ai-send" class="btn btn-primary btn-sm">Envoyer ✨</button>
+          </div>
+        </div>
+
+        <div id="ai-messages" class="ai-messages">
+          <div class="ai-message assistant">
+            👋 Bonjour ! Je suis votre copilote IA expert en <strong>Google Apps Script (V8)</strong>. Que souhaitez-vous développer ou optimiser aujourd'hui ?
+          </div>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <!-- Status Bar -->
+  <footer class="status-bar">
+    <div class="status-left">
+      <span class="status-item">Fichier : <span id="status-file-info">--</span></span>
+      <span class="status-item">Moteur : <strong>Google V8</strong></span>
+    </div>
+    <div class="status-right">
+      <span class="status-item">Raccourci : <code>Ctrl+S</code> (Sync)</span>
+      <span class="status-item" id="connection-indicator">100% Client-Side</span>
+    </div>
+  </footer>
+
+  <!-- Settings Modal -->
+  <div id="modal-settings" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">⚙️ Paramètres & Connexions</h3>
+        <button id="modal-settings-close" class="btn btn-ghost btn-sm">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="callout callout-info">
+          🔒 <strong>Confidentialité garantie :</strong> Tous vos identifiants, tokens et clés API sont stockés exclusivement dans votre navigateur (sessionStorage / localStorage). Aucun serveur tiers n'y a accès.
+        </div>
+
+        <div class="form-group">
+          <label for="setting-script-id">ID du projet Google Apps Script (Script ID) :</label>
+          <input type="text" id="setting-script-id" class="form-input" placeholder="ex: 1B7Fsx4... (trouvé dans l'URL de votre script)">
+          <span class="help-text">Trouvez-le dans l'URL de votre éditeur Apps Script : <code>script.google.com/home/projects/<b>&lt;ScriptID&gt;</b>/edit</code></span>
+        </div>
+
+        <hr style="border-color: var(--border-color);">
+
+        <h4 style="font-size: 0.9rem; font-weight: 600;">1. Authentification Google Apps Script (OAuth2 GIS)</h4>
+        
+        <div class="form-group">
+          <label for="setting-client-id">Google Cloud OAuth Client ID (Application Web) :</label>
+          <input type="text" id="setting-client-id" class="form-input" placeholder="ex: 123456789-abc.apps.googleusercontent.com">
+          <span class="help-text">Créez un ID Client OAuth Web gratuit sur Google Cloud Console avec l'API "Google Apps Script API" activée.</span>
+        </div>
+
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+          <span id="google-auth-status" class="help-text">⚪ Non connecté</span>
+          <div>
+            <button id="btn-google-login" class="btn btn-primary btn-sm">Se connecter avec Google 🔑</button>
+            <button id="btn-google-logout" class="btn btn-secondary btn-sm" style="display: none;">Déconnexion</button>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-top: 8px;">
+          <label for="setting-manual-token">Alternative : Token d'accès manuel (Bearer Token) :</label>
+          <input type="password" id="setting-manual-token" class="form-input" placeholder="ya29.a0AfH6SM...">
+          <span class="help-text">Pour des tests rapides sans configurer OAuth Client ID (généré via gcloud ou OAuth Playground).</span>
+        </div>
+
+        <hr style="border-color: var(--border-color);">
+
+        <h4 style="font-size: 0.9rem; font-weight: 600;">2. Google AI Studio (Gemini Code Assistant)</h4>
+
+        <div class="form-group">
+          <label for="setting-gemini-key">Clé API Google Gemini (Free Tier) :</label>
+          <div style="display: flex; gap: 8px;">
+            <input type="password" id="setting-gemini-key" class="form-input" style="flex: 1;" placeholder="AIzaSy...">
+            <button id="btn-test-gemini" class="btn btn-secondary btn-sm">Tester</button>
+          </div>
+          <span class="help-text">Obtenez gratuitement votre clé sur <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color: #818cf8;">aistudio.google.com</a>.</span>
+        </div>
+
+        <div class="form-group">
+          <label for="setting-gemini-model">Modèle Gemini :</label>
+          <select id="setting-gemini-model" class="form-select">
+            <option value="gemini-2.5-flash">Gemini 2.5 Flash (Recommandé — Rapide, V8 expert)</option>
+            <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
+            <option value="gemini-1.5-pro">Gemini 1.5 Pro (Raisonnement approfondi)</option>
+          </select>
+        </div>
+
+        <hr style="border-color: var(--border-color);">
+
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <input type="checkbox" id="setting-autosync" checked>
+          <label for="setting-autosync" style="font-size: 0.82rem; cursor: pointer;">
+            Synchroniser automatiquement vers Google Apps Script lors de l'enregistrement (Ctrl+S)
+          </label>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button id="btn-save-settings" class="btn btn-primary">Enregistrer les paramètres</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Main Controller Entrypoint -->
+  <script type="module" src="js/app.js"></script>
+</body>
 </html>

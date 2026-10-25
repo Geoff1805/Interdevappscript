@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="gasGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4285F4"/>
+      <stop offset="50%" stop-color="#34A853"/>
+      <stop offset="100%" stop-color="#FBBC04"/>
+    </linearGradient>
+    <linearGradient id="sparkGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#7C3AED"/>
+      <stop offset="100%" stop-color="#EC4899"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="16" fill="#0f172a"/>
+  <!-- Code brackets -->
+  <path d="M22 20 L12 32 L22 44" fill="none" stroke="url(#gasGrad)" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M42 20 L52 32 L42 44" fill="none" stroke="url(#gasGrad)" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Central Spark / Lightning -->
+  <path d="M34 16 L26 33 L33 33 L30 48 L41 31 L34 31 Z" fill="url(#sparkGrad)"/>
+</svg>
