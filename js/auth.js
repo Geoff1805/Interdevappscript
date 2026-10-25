@@ -9,8 +9,13 @@ export class AuthManager {
 		this.tokenKey = "interdev_google_access_token";
 		this.tokenExpiryKey = "interdev_google_token_expiry";
 		this.manualTokenKey = "interdev_google_manual_token";
+		this.userEmailKey = "interdev_google_user_email";
 		this.tokenClient = null;
 		this.onTokenChangeCallbacks = [];
+	}
+
+	getUserEmail() {
+		return sessionStorage.getItem(this.userEmailKey) || "";
 	}
 
 	getClientId() {
@@ -59,9 +64,9 @@ export class AuthManager {
 			this.tokenClient = window.google.accounts.oauth2.initTokenClient({
 				client_id: clientId,
 				scope:
-					"https://www.googleapis.com/auth/script.projects https://www.googleapis.com/auth/script.deployments https://www.googleapis.com/auth/drive.metadata.readonly",
-				prompt: "",
-				callback: (response) => {
+					"https://www.googleapis.com/auth/script.projects https://www.googleapis.com/auth/script.deployments https://www.googleapis.com/auth/drive.metadata.readonly https://www.googleapis.com/auth/userinfo.email",
+				prompt: "select_account",
+				callback: async (response) => {
 					if (response.error) {
 						console.error("Google OAuth error:", response);
 						alert(
@@ -74,6 +79,25 @@ export class AuthManager {
 						const expiryTime = Date.now() + expiresInSeconds * 1000;
 						sessionStorage.setItem(this.tokenKey, response.access_token);
 						sessionStorage.setItem(this.tokenExpiryKey, expiryTime.toString());
+
+						// Récupération de l'adresse email connectée (ex: g@alsteens.net)
+						try {
+							const userRes = await fetch(
+								"https://www.googleapis.com/oauth2/v3/userinfo",
+								{
+									headers: { Authorization: `Bearer ${response.access_token}` },
+								},
+							);
+							if (userRes.ok) {
+								const userData = await userRes.json();
+								if (userData.email) {
+									sessionStorage.setItem(this.userEmailKey, userData.email);
+								}
+							}
+						} catch (e) {
+							console.warn("Impossible de récupérer l'email utilisateur:", e);
+						}
+
 						this.notifyTokenChange();
 					}
 				},
@@ -109,7 +133,7 @@ export class AuthManager {
 				throw new Error("Impossible d'initialiser le client Google OAuth.");
 			}
 		}
-		this.tokenClient.requestAccessToken({ prompt: "" });
+		this.tokenClient.requestAccessToken({ prompt: "select_account" });
 	}
 
 	/**
@@ -146,6 +170,7 @@ export class AuthManager {
 		sessionStorage.removeItem(this.tokenKey);
 		sessionStorage.removeItem(this.tokenExpiryKey);
 		sessionStorage.removeItem(this.manualTokenKey);
+		sessionStorage.removeItem(this.userEmailKey);
 		const token = this.getAccessToken();
 		if (
 			token &&

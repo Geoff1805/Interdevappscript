@@ -769,7 +769,10 @@ function lancerNettoyageAutomatique() {
 		if (isAuthed) {
 			btnLogin.style.display = "none";
 			btnLogout.style.display = "inline-flex";
-			statusText.textContent = "🟢 Connecté à Google Apps Script";
+			const email = this.auth.getUserEmail();
+			statusText.textContent = email
+				? `🟢 Connecté : ${email} (Accès Scripts & Drive)`
+				: "🟢 Connecté à Google Apps Script";
 			statusText.className = "help-text text-green-400";
 		} else {
 			btnLogin.style.display = "inline-flex";
