@@ -14,7 +14,10 @@ export class AuthManager {
 	}
 
 	getClientId() {
-		return localStorage.getItem(this.clientIdKey) || "";
+		return (
+			localStorage.getItem(this.clientIdKey) ||
+			"740777072621-33egh4phvjfgu84alpn1ovj16s83g7hs.apps.googleusercontent.com"
+		);
 	}
 
 	setClientId(clientId) {

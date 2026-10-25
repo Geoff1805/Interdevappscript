@@ -6,3 +6,8 @@ dist-ssr
 .env.*
 !.env.example
 .DS_Store
+client_secret*.json
+credentials*.json
+*.secret.json
+.build.lock
+
