@@ -14,7 +14,14 @@ class InterdevApp {
 		this.openTabs = [];
 		this.activeFileId = null;
 		this.dirtyFiles = new Set();
-		this.scriptId = localStorage.getItem("interdev_script_id") || "";
+		const urlScriptId = new URLSearchParams(window.location.search).get(
+			"scriptId",
+		);
+		this.scriptId =
+			urlScriptId || localStorage.getItem("interdev_script_id") || "";
+		if (urlScriptId) {
+			localStorage.setItem("interdev_script_id", urlScriptId);
+		}
 		this.projectTitle = "Sans titre";
 		this.userProjects = [];
 		this.autoSyncOnSave = localStorage.getItem("interdev_autosync") !== "false";
@@ -270,6 +277,7 @@ function synchroniserEvenementsAgenda() {
 	}
 
 	async init() {
+		this.auth.initGisClient();
 		this.bindDOM();
 		this.initMonaco();
 		this.loadInitialFiles();

@@ -44,7 +44,9 @@ export class AiClient {
 
 	// --- Gestion du Fournisseur Actif ---
 	getActiveProvider() {
-		return localStorage.getItem(this.providerStorageKey) || this.defaultProvider;
+		return (
+			localStorage.getItem(this.providerStorageKey) || this.defaultProvider
+		);
 	}
 
 	setActiveProvider(provider) {
@@ -68,7 +70,8 @@ export class AiClient {
 
 	getModel() {
 		return (
-			localStorage.getItem(this.geminiModelStorageKey) || this.defaultGeminiModel
+			localStorage.getItem(this.geminiModelStorageKey) ||
+			this.defaultGeminiModel
 		);
 	}
 
@@ -195,7 +198,9 @@ export class AiClient {
 	async fetchAvailableModels(apiKey = null) {
 		const key = apiKey || this.getApiKey();
 		if (!key) {
-			throw new Error("Clé API Google Gemini requise pour récupérer les modèles.");
+			throw new Error(
+				"Clé API Google Gemini requise pour récupérer les modèles.",
+			);
 		}
 
 		const endpoint = `https://generativelanguage.googleapis.com/v1beta/models?key=${key}`;
@@ -235,7 +240,10 @@ export class AiClient {
 		});
 
 		if (textModels.length > 0) {
-			localStorage.setItem(this.geminiCachedModelsKey, JSON.stringify(textModels));
+			localStorage.setItem(
+				this.geminiCachedModelsKey,
+				JSON.stringify(textModels),
+			);
 		}
 
 		return textModels;
@@ -273,16 +281,40 @@ Règles strictes de développement :
 		const provider = this.getActiveProvider();
 
 		if (provider === "groq") {
-			return this.callGroq({ prompt, activeFile, allFiles, actionType, systemInstruction });
+			return this.callGroq({
+				prompt,
+				activeFile,
+				allFiles,
+				actionType,
+				systemInstruction,
+			});
 		}
 		if (provider === "mistral") {
-			return this.callMistral({ prompt, activeFile, allFiles, actionType, systemInstruction });
+			return this.callMistral({
+				prompt,
+				activeFile,
+				allFiles,
+				actionType,
+				systemInstruction,
+			});
 		}
 		if (provider === "openrouter") {
-			return this.callOpenRouter({ prompt, activeFile, allFiles, actionType, systemInstruction });
+			return this.callOpenRouter({
+				prompt,
+				activeFile,
+				allFiles,
+				actionType,
+				systemInstruction,
+			});
 		}
 		if (provider === "ollama") {
-			return this.callOllama({ prompt, activeFile, allFiles, actionType, systemInstruction });
+			return this.callOllama({
+				prompt,
+				activeFile,
+				allFiles,
+				actionType,
+				systemInstruction,
+			});
 		}
 
 		// Par défaut : Gemini avec Fallback Anti-Saturation automatique
@@ -396,7 +428,10 @@ Règles strictes de développement :
 			}
 		}
 
-		throw lastError || new Error("Tous les modèles Gemini sont temporairement saturés.");
+		throw (
+			lastError ||
+			new Error("Tous les modèles Gemini sont temporairement saturés.")
+		);
 	}
 
 	/**
@@ -415,29 +450,39 @@ Règles strictes de développement :
 		}
 
 		const model = this.getGroqModel();
-		const finalPrompt = this.buildFinalPrompt({ prompt, activeFile, allFiles, actionType });
+		const finalPrompt = this.buildFinalPrompt({
+			prompt,
+			activeFile,
+			allFiles,
+			actionType,
+		});
 		const sysPrompt = systemInstruction || this.getSystemInstruction();
 
-		const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-				Authorization: `Bearer ${apiKey}`,
+		const response = await fetch(
+			"https://api.groq.com/openai/v1/chat/completions",
+			{
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					Authorization: `Bearer ${apiKey}`,
+				},
+				body: JSON.stringify({
+					model: model,
+					messages: [
+						{ role: "system", content: sysPrompt },
+						{ role: "user", content: finalPrompt },
+					],
+					temperature: 0.2,
+					max_tokens: 8192,
+				}),
 			},
-			body: JSON.stringify({
-				model: model,
-				messages: [
-					{ role: "system", content: sysPrompt },
-					{ role: "user", content: finalPrompt },
-				],
-				temperature: 0.2,
-				max_tokens: 8192,
-			}),
-		});
+		);
 
 		if (!response.ok) {
 			const err = await response.json().catch(() => ({}));
-			throw new Error(err.error?.message || `Erreur Groq API (${response.status})`);
+			throw new Error(
+				err.error?.message || `Erreur Groq API (${response.status})`,
+			);
 		}
 
 		const data = await response.json();
@@ -465,7 +510,12 @@ Règles strictes de développement :
 		}
 
 		const model = this.getMistralModel();
-		const finalPrompt = this.buildFinalPrompt({ prompt, activeFile, allFiles, actionType });
+		const finalPrompt = this.buildFinalPrompt({
+			prompt,
+			activeFile,
+			allFiles,
+			actionType,
+		});
 		const sysPrompt = systemInstruction || this.getSystemInstruction();
 
 		const response = await fetch("https://api.mistral.ai/v1/chat/completions", {
@@ -486,7 +536,9 @@ Règles strictes de développement :
 
 		if (!response.ok) {
 			const err = await response.json().catch(() => ({}));
-			throw new Error(err.error?.message || `Erreur Mistral API (${response.status})`);
+			throw new Error(
+				err.error?.message || `Erreur Mistral API (${response.status})`,
+			);
 		}
 
 		const data = await response.json();
@@ -514,29 +566,39 @@ Règles strictes de développement :
 		}
 
 		const model = this.getOpenRouterModel();
-		const finalPrompt = this.buildFinalPrompt({ prompt, activeFile, allFiles, actionType });
+		const finalPrompt = this.buildFinalPrompt({
+			prompt,
+			activeFile,
+			allFiles,
+			actionType,
+		});
 		const sysPrompt = systemInstruction || this.getSystemInstruction();
 
-		const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-				Authorization: `Bearer ${apiKey}`,
-				"HTTP-Referer": "https://geoff1805.github.io/Interdevappscript/",
-				"X-Title": "Interdevappscript Studio",
+		const response = await fetch(
+			"https://openrouter.ai/api/v1/chat/completions",
+			{
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					Authorization: `Bearer ${apiKey}`,
+					"HTTP-Referer": "https://geoff1805.github.io/Interdevappscript/",
+					"X-Title": "Interdevappscript Studio",
+				},
+				body: JSON.stringify({
+					model: model,
+					messages: [
+						{ role: "system", content: sysPrompt },
+						{ role: "user", content: finalPrompt },
+					],
+				}),
 			},
-			body: JSON.stringify({
-				model: model,
-				messages: [
-					{ role: "system", content: sysPrompt },
-					{ role: "user", content: finalPrompt },
-				],
-			}),
-		});
+		);
 
 		if (!response.ok) {
 			const err = await response.json().catch(() => ({}));
-			throw new Error(err.error?.message || `Erreur OpenRouter (${response.status})`);
+			throw new Error(
+				err.error?.message || `Erreur OpenRouter (${response.status})`,
+			);
 		}
 
 		const data = await response.json();
@@ -560,7 +622,12 @@ Règles strictes de développement :
 	}) {
 		const endpoint = this.getOllamaEndpoint().replace(/\/$/, "");
 		const model = this.getOllamaModel();
-		const finalPrompt = this.buildFinalPrompt({ prompt, activeFile, allFiles, actionType });
+		const finalPrompt = this.buildFinalPrompt({
+			prompt,
+			activeFile,
+			allFiles,
+			actionType,
+		});
 		const sysPrompt = systemInstruction || this.getSystemInstruction();
 
 		const url = `${endpoint}/v1/chat/completions`;
@@ -592,14 +659,21 @@ Règles strictes de développement :
 		};
 	}
 
-	buildFinalPrompt({ prompt, activeFile, allFiles = [], actionType = "general" }) {
+	buildFinalPrompt({
+		prompt,
+		activeFile,
+		allFiles = [],
+		actionType = "general",
+	}) {
 		let contextMessage = "";
 		if (activeFile) {
 			contextMessage += `Fichier actif (${activeFile.displayName}) :\n\`\`\`${activeFile.displayName.endsWith(".html") ? "html" : "javascript"}\n${activeFile.source}\n\`\`\`\n\n`;
 		}
 
 		if (allFiles.length > 1) {
-			const otherFiles = allFiles.filter((f) => !activeFile || f.id !== activeFile.id);
+			const otherFiles = allFiles.filter(
+				(f) => !activeFile || f.id !== activeFile.id,
+			);
 			contextMessage += `Autres fichiers du projet :\n`;
 			otherFiles.forEach((f) => {
 				contextMessage += `- ${f.displayName} (${f.type})\n`;
