@@ -486,8 +486,27 @@
       </div>
 
       <div class="modal-body">
-        <div class="callout callout-info">
-          🛡️ <strong>Confidentialité absolue :</strong> Tous vos identifiants, tokens et clés API sont stockés exclusivement dans votre navigateur (sessionStorage / localStorage). Aucun serveur tiers n'y a accès.
+        <!-- Fast Configuration Hub -->
+        <div class="config-hub-banner">
+          <div class="config-hub-title">
+            <span>⚡ Profil & Synchronisation Zéro-Saisie</span>
+            <span class="hub-tag-private">Dépôt Privé GitHub</span>
+          </div>
+          <p class="config-hub-desc">
+            Ne perdez plus vos clés : importez votre fichier <code>interdev-config.json</code> ou synchronisez-le avec votre dépôt privé en 1 clic.
+          </p>
+          <div class="config-hub-actions">
+            <input type="file" id="config-file-input" accept=".json" style="display: none;">
+            <button id="btn-import-config" type="button" class="btn btn-secondary btn-sm" title="Charger un fichier interdev-config.json local">
+              📂 Importer JSON
+            </button>
+            <button id="btn-export-config" type="button" class="btn btn-secondary btn-sm" title="Télécharger votre configuration actuelle">
+              💾 Exporter JSON
+            </button>
+            <button id="btn-github-sync-config" type="button" class="btn btn-primary btn-sm" title="Récupérer depuis Geoff1805/google-workspace-scripts">
+              🐙 Synchro GitHub Privé
+            </button>
+          </div>
         </div>
 
         <div class="form-group">
@@ -522,33 +541,102 @@
 
         <hr style="border-color: var(--border-color);">
 
-        <h4 style="font-size: 0.9rem; font-weight: 600;">2. Google AI Studio (Gemini Code Assistant)</h4>
+        <h4 style="font-size: 0.9rem; font-weight: 600;">2. Fournisseurs d'IA & Modèles</h4>
 
         <div class="form-group">
-          <label for="setting-gemini-key">Clé API Google Gemini (Free Tier ou Licence / Projet payant) :</label>
-          <div style="display: flex; gap: 8px;">
-            <input type="password" id="setting-gemini-key" class="form-input" style="flex: 1;" placeholder="Coller votre clé Gemini...">
-            <button id="btn-toggle-key-visibility" class="btn btn-secondary btn-sm" type="button" title="Afficher / Masquer la clé">👁️</button>
-            <button id="btn-test-gemini" class="btn btn-secondary btn-sm">Tester</button>
-          </div>
-          <span class="help-text">
-            Obtenez votre clé sur <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color: #818cf8;">aistudio.google.com/app/apikey</a>.
-            <br>💡 <em>Compte avec licence/abonnement différent ?</em> Cliquez sur l'avatar en haut à droite sur Google AI Studio pour changer de compte, ou utilisez une fenêtre de navigation privée.
-          </span>
+          <label for="setting-ai-provider">Fournisseur d'IA actif :</label>
+          <select id="setting-ai-provider" class="form-select">
+            <option value="gemini">Google Gemini (Google AI Studio + Fallback Anti-Saturation)</option>
+            <option value="groq">Groq Cloud (DeepSeek-R1 / Llama 3.3 — Gratuit & Instantané)</option>
+            <option value="mistral">Mistral AI (Codestral — Expert Code Apps Script)</option>
+            <option value="openrouter">OpenRouter (Multi-Modèles)</option>
+            <option value="ollama">Ollama Local (100% Hors-Ligne & 0 Token)</option>
+          </select>
         </div>
 
-        <div class="form-group">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <label for="setting-gemini-model">Modèle Gemini :</label>
-            <button id="btn-refresh-models" class="btn btn-ghost btn-sm" style="font-size: 0.72rem;" title="Interroger Google AI Studio pour obtenir la liste en temps réel">🔄 Actualiser les modèles</button>
+        <!-- Section Gemini -->
+        <div id="provider-section-gemini" class="provider-config-box">
+          <div class="form-group">
+            <label for="setting-gemini-key">Clé API Google Gemini :</label>
+            <div style="display: flex; gap: 8px;">
+              <input type="password" id="setting-gemini-key" class="form-input" style="flex: 1;" placeholder="Coller votre clé Gemini...">
+              <button id="btn-toggle-key-visibility" class="btn btn-secondary btn-sm" type="button" title="Afficher / Masquer la clé">👁️</button>
+              <button id="btn-test-gemini" class="btn btn-secondary btn-sm">Tester</button>
+            </div>
+            <span class="help-text">
+              Obtenez votre clé sur <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color: #818cf8;">aistudio.google.com/app/apikey</a>.
+              <br>🛡️ <strong>Anti-Saturation actif :</strong> Si un modèle est surchargé (503/429), le copilote bascule automatiquement sur les versions de secours sans erreur.
+            </span>
           </div>
-          <select id="setting-gemini-model" class="form-select">
-            <option value="gemini-3.8-flash">Gemini 3.8 Flash (Recommandé — Rapide, V8 expert)</option>
-            <option value="gemini-2.5-pro">Gemini 2.5 Pro (Raisonnement avancé)</option>
-            <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
-            <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
-          </select>
-          <span id="models-status-text" class="help-text">Modèles chargés dynamiquement depuis votre compte Google AI Studio.</span>
+
+          <div class="form-group">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <label for="setting-gemini-model">Modèle Gemini principal :</label>
+              <button id="btn-refresh-models" class="btn btn-ghost btn-sm" style="font-size: 0.72rem;" title="Interroger Google AI Studio pour obtenir la liste en temps réel">🔄 Actualiser les modèles</button>
+            </div>
+            <select id="setting-gemini-model" class="form-select">
+              <option value="gemini-3.8-flash">Gemini 3.8 Flash (Recommandé — Rapide, V8 expert)</option>
+              <option value="gemini-2.5-pro">Gemini 2.5 Pro (Raisonnement avancé)</option>
+              <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+              <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
+              <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+            </select>
+            <span id="models-status-text" class="help-text">Modèles chargés dynamiquement depuis votre compte Google AI Studio.</span>
+          </div>
+        </div>
+
+        <!-- Section Groq -->
+        <div id="provider-section-groq" class="provider-config-box hidden">
+          <div class="form-group">
+            <label for="setting-groq-key">Clé API Groq Cloud :</label>
+            <div style="display: flex; gap: 8px;">
+              <input type="password" id="setting-groq-key" class="form-input" style="flex: 1;" placeholder="gsk_...">
+              <button id="btn-toggle-groq-visibility" class="btn btn-secondary btn-sm" type="button" title="Afficher / Masquer">👁️</button>
+              <button id="btn-test-groq" class="btn btn-secondary btn-sm">Tester</button>
+            </div>
+            <span class="help-text">Obtenez votre clé gratuite sur <a href="https://console.groq.com/keys" target="_blank" style="color: #818cf8;">console.groq.com</a> (Inférence 200 tokens/sec).</span>
+          </div>
+          <div class="form-group" style="margin-top: 8px;">
+            <label for="setting-groq-model">Modèle Groq :</label>
+            <select id="setting-groq-model" class="form-select">
+              <option value="llama-3.3-70b-versatile">Llama 3.3 70B Versatile (Recommandé)</option>
+              <option value="deepseek-r1-distill-llama-70b">DeepSeek-R1 Distill Llama 70B</option>
+              <option value="llama-3.1-8b-instant">Llama 3.1 8B Instant</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Section Mistral -->
+        <div id="provider-section-mistral" class="provider-config-box hidden">
+          <div class="form-group">
+            <label for="setting-mistral-key">Clé API Mistral (Codestral) :</label>
+            <div style="display: flex; gap: 8px;">
+              <input type="password" id="setting-mistral-key" class="form-input" style="flex: 1;" placeholder="Clé Mistral...">
+              <button id="btn-toggle-mistral-visibility" class="btn btn-secondary btn-sm" type="button" title="Afficher / Masquer">👁️</button>
+              <button id="btn-test-mistral" class="btn btn-secondary btn-sm">Tester</button>
+            </div>
+            <span class="help-text">Obtenez votre clé sur <a href="https://console.mistral.ai/" target="_blank" style="color: #818cf8;">console.mistral.ai</a> (Codestral champion code).</span>
+          </div>
+          <div class="form-group" style="margin-top: 8px;">
+            <label for="setting-mistral-model">Modèle Mistral :</label>
+            <select id="setting-mistral-model" class="form-select">
+              <option value="codestral-latest">Codestral Latest (Expert Apps Script)</option>
+              <option value="mistral-large-latest">Mistral Large Latest</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Section Ollama -->
+        <div id="provider-section-ollama" class="provider-config-box hidden">
+          <div class="form-group">
+            <label for="setting-ollama-endpoint">Point de terminaison Ollama :</label>
+            <input type="text" id="setting-ollama-endpoint" class="form-input" value="http://localhost:11434">
+            <span class="help-text">Ollama doit être en cours d'exécution sur votre PC (OLLAMA_ORIGINS="*" autorisé).</span>
+          </div>
+          <div class="form-group" style="margin-top: 8px;">
+            <label for="setting-ollama-model">Modèle local :</label>
+            <input type="text" id="setting-ollama-model" class="form-input" value="qwen2.5-coder:1.5b">
+          </div>
         </div>
 
         <hr style="border-color: var(--border-color);">

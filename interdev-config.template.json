@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "version": "1.0.0",
+  "description": "Modèle de configuration Interdevappscript — Complétez vos clés ou utilisez le fichier sécurisé de votre dépôt privé",
+  "google_apps_script": {
+    "script_id": "VOTRE_SCRIPT_ID",
+    "client_id": "VOTRE_CLIENT_ID_GOOGLE_CLOUD.apps.googleusercontent.com"
+  },
+  "ai_providers": {
+    "active_provider": "gemini",
+    "gemini": {
+      "api_key": "VOTRE_CLE_GEMINI_AI_STUDIO",
+      "model": "gemini-3.8-flash",
+      "fallback_models": ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash", "gemini-2.5-pro"]
+    },
+    "groq": {
+      "api_key": "gsk_VOTRE_CLE_GROQ_CLOUD",
+      "model": "llama-3.3-70b-versatile"
+    },
+    "mistral": {
+      "api_key": "VOTRE_CLE_MISTRAL_AI",
+      "model": "codestral-latest"
+    },
+    "openrouter": {
+      "api_key": "sk-or-v1-VOTRE_CLE_OPENROUTER",
+      "model": "deepseek/deepseek-r1:free"
+    },
+    "ollama": {
+      "endpoint": "http://localhost:11434",
+      "model": "qwen2.5-coder:1.5b"
+    }
+  }
+}

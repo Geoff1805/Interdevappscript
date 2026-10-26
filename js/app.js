@@ -422,6 +422,50 @@ function synchroniserEvenementsAgenda() {
 			.getElementById("btn-refresh-models")
 			?.addEventListener("click", () => this.populateGeminiModels(true));
 
+		// Fournisseurs IA Alternatifs (Groq, Mistral, Ollama)
+		document
+			.getElementById("setting-ai-provider")
+			?.addEventListener("change", (e) => {
+				this.switchProviderSection(e.target.value);
+			});
+		document
+			.getElementById("btn-toggle-groq-visibility")
+			?.addEventListener("click", () => {
+				const input = document.getElementById("setting-groq-key");
+				if (input) input.type = input.type === "password" ? "text" : "password";
+			});
+		document
+			.getElementById("btn-test-groq")
+			?.addEventListener("click", () => this.testGroqConnection());
+		document
+			.getElementById("btn-toggle-mistral-visibility")
+			?.addEventListener("click", () => {
+				const input = document.getElementById("setting-mistral-key");
+				if (input) input.type = input.type === "password" ? "text" : "password";
+			});
+		document
+			.getElementById("btn-test-mistral")
+			?.addEventListener("click", () => this.testMistralConnection());
+
+		// Sauvegarde & Import / Export Configuration (JSON & GitHub Privé)
+		document
+			.getElementById("btn-import-config")
+			?.addEventListener("click", () => {
+				document.getElementById("config-file-input")?.click();
+			});
+		document
+			.getElementById("config-file-input")
+			?.addEventListener("change", (e) => {
+				const file = e.target.files?.[0];
+				if (file) this.importConfigFile(file);
+			});
+		document
+			.getElementById("btn-export-config")
+			?.addEventListener("click", () => this.exportConfigFile());
+		document
+			.getElementById("btn-github-sync-config")
+			?.addEventListener("click", () => this.syncFromGitHubPrivate());
+
 		// Tests & Diagnostic Actions
 		document
 			.getElementById("btn-run-tests")
@@ -1510,16 +1554,61 @@ Demande : ${prompt}`;
 		const manualTokenInput = document.getElementById("setting-manual-token");
 		if (manualTokenInput) manualTokenInput.value = this.auth.getManualToken();
 
+		// Provider actif
+		const activeProvider = this.ai.getActiveProvider();
+		const providerSelect = document.getElementById("setting-ai-provider");
+		if (providerSelect) providerSelect.value = activeProvider;
+		this.switchProviderSection(activeProvider);
+
+		// Gemini
 		const geminiKeyInput = document.getElementById("setting-gemini-key");
 		if (geminiKeyInput) geminiKeyInput.value = this.ai.getApiKey();
-
 		const geminiModelSelect = document.getElementById("setting-gemini-model");
 		if (geminiModelSelect) geminiModelSelect.value = this.ai.getModel();
+
+		// Groq
+		const groqKeyInput = document.getElementById("setting-groq-key");
+		if (groqKeyInput) groqKeyInput.value = this.ai.getGroqKey();
+		const groqModelSelect = document.getElementById("setting-groq-model");
+		if (groqModelSelect) groqModelSelect.value = this.ai.getGroqModel();
+
+		// Mistral
+		const mistralKeyInput = document.getElementById("setting-mistral-key");
+		if (mistralKeyInput) mistralKeyInput.value = this.ai.getMistralKey();
+		const mistralModelSelect = document.getElementById("setting-mistral-model");
+		if (mistralModelSelect)
+			mistralModelSelect.value = this.ai.getMistralModel();
+
+		// Ollama
+		const ollamaEndpointInput = document.getElementById(
+			"setting-ollama-endpoint",
+		);
+		if (ollamaEndpointInput)
+			ollamaEndpointInput.value = this.ai.getOllamaEndpoint();
+		const ollamaModelInput = document.getElementById("setting-ollama-model");
+		if (ollamaModelInput) ollamaModelInput.value = this.ai.getOllamaModel();
 
 		const autosyncCheck = document.getElementById("setting-autosync");
 		if (autosyncCheck) autosyncCheck.checked = this.autoSyncOnSave;
 
 		this.updateAuthUI();
+	}
+
+	switchProviderSection(provider) {
+		const sections = {
+			gemini: document.getElementById("provider-section-gemini"),
+			groq: document.getElementById("provider-section-groq"),
+			mistral: document.getElementById("provider-section-mistral"),
+			ollama: document.getElementById("provider-section-ollama"),
+		};
+
+		Object.keys(sections).forEach((key) => {
+			if (key === provider) {
+				sections[key]?.classList.remove("hidden");
+			} else {
+				sections[key]?.classList.add("hidden");
+			}
+		});
 	}
 
 	closeSettingsModal() {
@@ -1533,11 +1622,51 @@ Demande : ${prompt}`;
 			document.getElementById("setting-client-id")?.value.trim() || "";
 		const manualToken =
 			document.getElementById("setting-manual-token")?.value.trim() || "";
+
+		const activeProvider =
+			document.getElementById("setting-ai-provider")?.value || "gemini";
+		this.ai.setActiveProvider(activeProvider);
+
+		// Gemini
 		const geminiKey =
 			document.getElementById("setting-gemini-key")?.value.trim() || "";
 		const geminiModel =
 			document.getElementById("setting-gemini-model")?.value ||
 			"gemini-3.8-flash";
+		this.ai.setApiKey(geminiKey);
+		this.ai.setModel(geminiModel);
+		if (geminiKey) {
+			this.populateGeminiModels(true);
+		}
+
+		// Groq
+		const groqKey =
+			document.getElementById("setting-groq-key")?.value.trim() || "";
+		const groqModel =
+			document.getElementById("setting-groq-model")?.value ||
+			"llama-3.3-70b-versatile";
+		this.ai.setGroqKey(groqKey);
+		this.ai.setGroqModel(groqModel);
+
+		// Mistral
+		const mistralKey =
+			document.getElementById("setting-mistral-key")?.value.trim() || "";
+		const mistralModel =
+			document.getElementById("setting-mistral-model")?.value ||
+			"codestral-latest";
+		this.ai.setMistralKey(mistralKey);
+		this.ai.setMistralModel(mistralModel);
+
+		// Ollama
+		const ollamaEndpoint =
+			document.getElementById("setting-ollama-endpoint")?.value.trim() ||
+			"http://localhost:11434";
+		const ollamaModel =
+			document.getElementById("setting-ollama-model")?.value.trim() ||
+			"qwen2.5-coder:1.5b";
+		this.ai.setOllamaEndpoint(ollamaEndpoint);
+		this.ai.setOllamaModel(ollamaModel);
+
 		const autosync =
 			document.getElementById("setting-autosync")?.checked ?? true;
 
@@ -1555,19 +1684,212 @@ Demande : ${prompt}`;
 		this.auth.setClientId(clientId);
 		this.auth.setManualToken(manualToken);
 
-		this.ai.setApiKey(geminiKey);
-		this.ai.setModel(geminiModel);
-		if (geminiKey) {
-			this.populateGeminiModels(true);
-		}
-
 		this.autoSyncOnSave = autosync;
 		localStorage.setItem("interdev_autosync", autosync ? "true" : "false");
 
 		this.closeSettingsModal();
-		this.showToast("Paramètres enregistrés", "success");
+		this.showToast("Paramètres enregistrés avec succès", "success");
 		this.updateAuthUI();
 		this.updateGeminiUI();
+	}
+
+	// --- Import / Export Configuration (interdev-config.json) ---
+	importConfigFile(file) {
+		const reader = new FileReader();
+		reader.onload = (e) => {
+			try {
+				const config = JSON.parse(e.target.result);
+				this.applyFullConfig(config);
+				this.showToast(
+					"Configuration importée ! Clés IA et paramètres synchronisés.",
+					"success",
+				);
+			} catch (err) {
+				alert(`Erreur lors de la lecture du fichier JSON :\n${err.message}`);
+			}
+		};
+		reader.readAsText(file);
+	}
+
+	applyFullConfig(config) {
+		if (config.google_apps_script) {
+			if (config.google_apps_script.script_id) {
+				this.scriptId = config.google_apps_script.script_id;
+				localStorage.setItem("interdev_script_id", this.scriptId);
+			}
+			if (config.google_apps_script.client_id) {
+				this.auth.setClientId(config.google_apps_script.client_id);
+			}
+		}
+
+		const ai = config.ai_providers || {};
+		if (ai.active_provider) {
+			this.ai.setActiveProvider(ai.active_provider);
+		}
+
+		if (ai.gemini?.api_key) {
+			this.ai.setApiKey(ai.gemini.api_key);
+			if (ai.gemini.model) this.ai.setModel(ai.gemini.model);
+		}
+
+		if (ai.groq?.api_key) {
+			this.ai.setGroqKey(ai.groq.api_key);
+			if (ai.groq.model) this.ai.setGroqModel(ai.groq.model);
+		}
+
+		if (ai.mistral?.api_key) {
+			this.ai.setMistralKey(ai.mistral.api_key);
+			if (ai.mistral.model) this.ai.setMistralModel(ai.mistral.model);
+		}
+
+		if (ai.openrouter?.api_key) {
+			this.ai.setOpenRouterKey(ai.openrouter.api_key);
+			if (ai.openrouter.model) this.ai.setOpenRouterModel(ai.openrouter.model);
+		}
+
+		if (ai.ollama?.endpoint) {
+			this.ai.setOllamaEndpoint(ai.ollama.endpoint);
+			if (ai.ollama.model) this.ai.setOllamaModel(ai.ollama.model);
+		}
+
+		this.openSettingsModal(); // Rafraîchit les inputs visibles
+		this.updateAuthUI();
+		this.updateGeminiUI();
+	}
+
+	exportConfigFile() {
+		const config = {
+			version: "1.0.0",
+			exported_at: new Date().toISOString(),
+			google_apps_script: {
+				script_id: this.scriptId,
+				client_id: this.auth.getClientId(),
+			},
+			ai_providers: {
+				active_provider: this.ai.getActiveProvider(),
+				gemini: {
+					api_key: this.ai.getApiKey(),
+					model: this.ai.getModel(),
+				},
+				groq: {
+					api_key: this.ai.getGroqKey(),
+					model: this.ai.getGroqModel(),
+				},
+				mistral: {
+					api_key: this.ai.getMistralKey(),
+					model: this.ai.getMistralModel(),
+				},
+				openrouter: {
+					api_key: this.ai.getOpenRouterKey(),
+					model: this.ai.getOpenRouterModel(),
+				},
+				ollama: {
+					endpoint: this.ai.getOllamaEndpoint(),
+					model: this.ai.getOllamaModel(),
+				},
+			},
+		};
+
+		const blob = new Blob([JSON.stringify(config, null, 2)], {
+			type: "application/json",
+		});
+		const url = URL.createObjectURL(blob);
+		const a = document.createElement("a");
+		a.href = url;
+		a.download = "interdev-config.json";
+		a.click();
+		URL.revokeObjectURL(url);
+		this.showToast("Fichier interdev-config.json téléchargé !", "success");
+	}
+
+	async syncFromGitHubPrivate() {
+		const tokenKey = "interdev_github_token";
+		let ghToken = localStorage.getItem(tokenKey);
+
+		if (!ghToken) {
+			ghToken = prompt(
+				"Entrez votre Personal Access Token GitHub (avec droit 'repo') pour lire votre dépôt privé Geoff1805/google-workspace-scripts :",
+			);
+			if (!ghToken) return;
+			localStorage.setItem(tokenKey, ghToken.trim());
+		}
+
+		this.showToast(
+			"Téléchargement de interdev-config.json depuis GitHub...",
+			"info",
+		);
+
+		try {
+			const res = await fetch(
+				"https://api.github.com/repos/Geoff1805/google-workspace-scripts/contents/interdev-config.json",
+				{
+					headers: {
+						Authorization: `Bearer ${ghToken.trim()}`,
+						Accept: "application/vnd.github.v3+json",
+					},
+				},
+			);
+
+			if (!res.ok) {
+				if (res.status === 401 || res.status === 403) {
+					localStorage.removeItem(tokenKey);
+					throw new Error("Token GitHub invalide ou expiré.");
+				}
+				throw new Error(`Erreur GitHub API (${res.status})`);
+			}
+
+			const data = await res.json();
+			const decodedContent = decodeURIComponent(
+				escape(atob(data.content.replace(/\n/g, ""))),
+			);
+			const config = JSON.parse(decodedContent);
+			this.applyFullConfig(config);
+			this.showToast(
+				"✨ Configuration synchronisée avec Geoff1805/google-workspace-scripts !",
+				"success",
+			);
+		} catch (e) {
+			alert(`Échec de la synchronisation GitHub :\n${e.message}`);
+		}
+	}
+
+	async testGroqConnection() {
+		const key = document.getElementById("setting-groq-key")?.value.trim();
+		if (!key) {
+			alert("Veuillez renseigner votre clé API Groq.");
+			return;
+		}
+		const testAi = new AiClient();
+		testAi.setGroqKey(key);
+		testAi.setActiveProvider("groq");
+		try {
+			const res = await testAi.generateCode({
+				prompt: "Réponds simplement 'Connexion Groq Opérationnelle !'",
+			});
+			alert(`Succès Groq :\n\n${res.rawText}`);
+		} catch (e) {
+			alert(`Échec Groq : ${e.message}`);
+		}
+	}
+
+	async testMistralConnection() {
+		const key = document.getElementById("setting-mistral-key")?.value.trim();
+		if (!key) {
+			alert("Veuillez renseigner votre clé API Mistral.");
+			return;
+		}
+		const testAi = new AiClient();
+		testAi.setMistralKey(key);
+		testAi.setActiveProvider("mistral");
+		try {
+			const res = await testAi.generateCode({
+				prompt:
+					"Réponds simplement 'Connexion Mistral Codestral Opérationnelle !'",
+			});
+			alert(`Succès Mistral :\n\n${res.rawText}`);
+		} catch (e) {
+			alert(`Échec Mistral : ${e.message}`);
+		}
 	}
 
 	handleGoogleLogin() {
@@ -1660,13 +1982,24 @@ Demande : ${prompt}`;
 	}
 
 	updateGeminiUI() {
-		const model = this.ai.getModel();
+		const provider = this.ai.getActiveProvider();
 		const headerText = document.getElementById("header-gemini-text");
 		const currentModelTag = document.getElementById("ai-current-model-tag");
 
-		const cleanModel = model.replace(/^gemini-/, "Gemini ");
-		if (headerText) headerText.textContent = cleanModel;
-		if (currentModelTag) currentModelTag.textContent = `Google ${cleanModel}`;
+		let label = "Gemini 3.8 Flash";
+		if (provider === "groq") {
+			label = `Groq (${this.ai.getGroqModel().split("-")[0]})`;
+		} else if (provider === "mistral") {
+			label = "Mistral Codestral";
+		} else if (provider === "ollama") {
+			label = `Ollama (${this.ai.getOllamaModel()})`;
+		} else {
+			const model = this.ai.getModel();
+			label = model.replace(/^gemini-/, "Gemini ");
+		}
+
+		if (headerText) headerText.textContent = label;
+		if (currentModelTag) currentModelTag.textContent = label;
 	}
 
 	updateStatusInfo() {

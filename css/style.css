@@ -1644,3 +1644,60 @@ body {
 	color: #bfdbfe;
 	border: 1px solid #3b82f6;
 }
+
+/* Config Hub & Multi-AI styles in Modal */
+.config-hub-banner {
+	background: linear-gradient(
+		135deg,
+		rgba(99, 102, 241, 0.15) 0%,
+		rgba(59, 130, 246, 0.1) 100%
+	);
+	border: 1px solid rgba(99, 102, 241, 0.35);
+	border-radius: 10px;
+	padding: 14px 16px;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.config-hub-title {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	font-weight: 700;
+	font-size: 0.88rem;
+	color: #e0e7ff;
+}
+
+.hub-tag-private {
+	font-size: 0.65rem;
+	padding: 2px 6px;
+	border-radius: 4px;
+	background: rgba(16, 185, 129, 0.2);
+	color: #34d399;
+	border: 1px solid rgba(16, 185, 129, 0.35);
+	text-transform: uppercase;
+}
+
+.config-hub-desc {
+	font-size: 0.76rem;
+	color: var(--text-muted);
+	line-height: 1.4;
+}
+
+.config-hub-actions {
+	display: flex;
+	gap: 8px;
+	flex-wrap: wrap;
+	margin-top: 4px;
+}
+
+.provider-config-box {
+	background: rgba(0, 0, 0, 0.2);
+	border: 1px solid var(--border-color);
+	border-radius: 8px;
+	padding: 12px;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
