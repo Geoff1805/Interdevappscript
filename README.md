@@ -46,3 +46,11 @@
 
 Le studio est accessible directement sans installation :
 👉 **[https://geoff1805.github.io/Interdevappscript/](https://geoff1805.github.io/Interdevappscript/)**
+
+---
+
+## 📄 Licence
+
+MIT — voir [LICENSE](LICENSE).
+
+Copyright (c) 2026 Geoff1805
