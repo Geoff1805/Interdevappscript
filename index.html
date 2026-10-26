@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Interdevappscript — Universal Google Apps Script & AI Studio</title>
+  <title>Interdevappscript — Universal Google Apps Script Studio & Workbench</title>
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
-  <link rel="stylesheet" href="css/style.css?v=1.0.7">
+  <link rel="stylesheet" href="css/style.css?v=1.1.0">
   <!-- Google Identity Services (OAuth2 Client) -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <!-- Monaco Editor AMD Loader -->
@@ -13,20 +13,22 @@
 </head>
 <body>
 
-  <!-- Header -->
+  <!-- Top Header -->
   <header class="app-header">
     <div class="brand">
       <img src="favicon.svg" alt="Logo" class="brand-icon">
-      <span>Interdevappscript</span>
-      <span class="brand-tag">Studio AI</span>
+      <div class="brand-text-block">
+        <span class="brand-name">Interdevappscript</span>
+        <span class="brand-tag">Studio AI V8</span>
+      </div>
     </div>
 
     <div class="header-center">
       <div class="project-selector-wrapper">
-        <button id="btn-project-dropdown" class="project-selector-btn" title="Changer de script">
+        <button id="btn-project-dropdown" class="project-selector-btn" title="Changer de script Google Apps Script">
           <span class="project-icon">⚡</span>
           <span id="project-title" class="project-title-text">Sélectionner un script</span>
-          <span class="dropdown-chevron">▼</span>
+          <span class="dropdown-chevron">▾</span>
         </button>
         <div id="project-dropdown-menu" class="project-dropdown-menu hidden">
           <div class="project-dropdown-header">
@@ -38,7 +40,7 @@
             <div class="dropdown-empty">Connectez-vous à Google pour lister vos scripts</div>
           </div>
           <div class="project-dropdown-footer">
-            <button id="btn-open-settings-script" class="btn btn-ghost btn-sm" style="width: 100%;">✏️ Ouvrir par Script ID...</button>
+            <button id="btn-open-settings-script" class="btn btn-ghost btn-sm" style="width: 100%;">⚙️ Ouvrir par Script ID...</button>
           </div>
         </div>
       </div>
@@ -50,84 +52,424 @@
     </div>
 
     <div class="header-actions">
-      <button id="btn-refresh" class="btn btn-secondary btn-sm" title="Recharger depuis Google Apps Script">
-        🔄 Recharger
-      </button>
-      <button id="btn-sync" class="btn btn-success btn-sm" title="Pousser vers Google Apps Script (Ctrl+S)">
-        ⚡ Sauvegarder & Sync
-      </button>
-      <button id="btn-ai-toggle" class="btn btn-primary btn-sm" title="Ouvrir l'assistant Gemini">
-        ✨ Assistant IA
-      </button>
-      <button id="btn-settings" class="btn btn-secondary btn-sm" title="Paramètres & Clés API">
+      <div id="header-account-badge" class="header-badge header-badge-google" title="Statut Google Apps Script API">
+        <span class="badge-dot"></span>
+        <span id="header-account-text" class="badge-text">Non connecté</span>
+      </div>
+      <div id="header-gemini-badge" class="header-badge header-badge-ai" title="Statut Google Gemini AI">
+        <span class="badge-icon">✨</span>
+        <span id="header-gemini-text" class="badge-text">Gemini 3.8 Flash</span>
+      </div>
+      <button id="btn-settings" class="btn btn-secondary btn-sm" title="Paramètres & Connexions">
         ⚙️ Paramètres
       </button>
     </div>
   </header>
 
-  <!-- Main Workspace -->
-  <main class="app-workspace">
-    <!-- Sidebar Explorer -->
-    <aside id="sidebar" class="sidebar">
-      <div class="sidebar-header">
-        <span>Fichiers du projet</span>
-        <div class="sidebar-actions">
-          <button id="btn-add-file" class="btn btn-ghost btn-sm" title="Nouveau fichier">+</button>
-          <button id="btn-sidebar-toggle" class="btn btn-ghost btn-sm" title="Replier">◀</button>
+  <!-- Main Shell with Navigation Sidebar + View Container -->
+  <div class="app-shell">
+    
+    <!-- Left Navigation Sidebar -->
+    <nav class="app-nav">
+      <div class="nav-section-title">Navigation Studio</div>
+      
+      <button class="nav-tab active" data-nav-tab="hub" title="Catalogue des scripts Google Workspace prêts à l'emploi">
+        <span class="nav-tab-icon">⚡</span>
+        <div class="nav-tab-info">
+          <span class="nav-tab-title">Apps Script Hub</span>
+          <span class="nav-tab-sub">Catalogue & Presets</span>
+        </div>
+      </button>
+
+      <button class="nav-tab" data-nav-tab="editor" title="Éditeur de code et synchronisation Google Apps Script">
+        <span class="nav-tab-icon">💻</span>
+        <div class="nav-tab-info">
+          <span class="nav-tab-title">Atelier Dev</span>
+          <span class="nav-tab-sub">Éditeur & Sync API</span>
+        </div>
+      </button>
+
+      <button class="nav-tab" data-nav-tab="tests" title="Validation, quotas, diagnostic et simulateur d'exécution">
+        <span class="nav-tab-icon">🧪</span>
+        <div class="nav-tab-info">
+          <span class="nav-tab-title">Tests & Diagnostic</span>
+          <span class="nav-tab-sub">Audit V8 & Quotas</span>
+        </div>
+      </button>
+
+      <button class="nav-tab" data-nav-tab="multidev" title="Ateliers polyglottes Python, SQL D1, KMP Mobile et AI Studio">
+        <span class="nav-tab-icon">🚀</span>
+        <div class="nav-tab-info">
+          <span class="nav-tab-title">Multi-Écosystèmes</span>
+          <span class="nav-tab-sub">Python, SQL, KMP</span>
+        </div>
+      </button>
+
+      <div class="nav-footer">
+        <div class="nav-security-badge">
+          <span class="shield-icon">🛡️</span>
+          <div>
+            <strong>100% Client-Side</strong>
+            <p>Zéro fuite de jeton</p>
+          </div>
+        </div>
+        <div class="nav-repo-info">
+          <span>Monorepo : Geoff1805</span>
         </div>
       </div>
-      <ul id="file-list" class="file-list">
-        <!-- Rendu dynamique des fichiers -->
-      </ul>
-    </aside>
+    </nav>
 
-    <!-- Editor Container -->
-    <section class="editor-container">
-      <div id="tab-bar" class="tab-bar">
-        <!-- Onglets dynamiques -->
-      </div>
-      <div id="monaco-host"></div>
-    </section>
-
-    <!-- Right AI Assistant Panel -->
-    <aside id="ai-panel" class="ai-panel">
-      <div class="ai-header">
-        <div class="ai-title">
-          <span>✨ Gemini Code Assistant</span>
-        </div>
-        <button id="btn-ai-close" class="btn btn-ghost btn-sm" onclick="document.getElementById('ai-panel').classList.add('collapsed')">✕</button>
-      </div>
-
-      <div class="ai-body">
-        <div class="ai-chips">
-          <button class="chip" data-action="optimize">⚡ Optimiser V8 & Quotas</button>
-          <button class="chip" data-action="audit">🛡️ Audit Timeouts & Quotas</button>
-          <button class="chip" data-action="jsdoc">📖 Générer JSDoc</button>
-          <button class="chip" data-action="trigger">🔄 Créer Déclencheur</button>
-        </div>
-
-        <div class="ai-input-box">
-          <textarea id="ai-input" class="ai-textarea" placeholder="Demandez une fonction, une optimisation, un correctif... (Ctrl+Entrée pour envoyer)"></textarea>
-          <div class="ai-input-actions">
-            <span style="font-size: 0.72rem; color: var(--text-dim);">Google Gemini 2.5 Flash</span>
-            <button id="btn-ai-send" class="btn btn-primary btn-sm">Envoyer ✨</button>
+    <!-- Views Container -->
+    <div class="views-container">
+      
+      <!-- VIEW 1: Apps Script Hub (Catalogue & Presets concrets) -->
+      <section id="view-hub" class="view-panel active">
+        <div class="hub-header">
+          <div>
+            <h2 class="view-title">⚡ Google Apps Script Workbench</h2>
+            <p class="view-desc">Console de gestion, modèles éprouvés et prévisualisation pour vos scripts Google Workspace.</p>
+          </div>
+          <div class="hub-selector-wrap">
+            <label for="hub-script-select" class="hub-label">Script modèle :</label>
+            <select id="hub-script-select" class="form-select hub-select">
+              <option value="cleanup">📧 Gmail CleanUp Pro (Archivage & Purge V8)</option>
+              <option value="export_titres">📊 Export Titres Gmail vers Sheets (Anti-Timeout)</option>
+              <option value="rules_manager">⚙️ Gmail Rules Manager (Export de Filtres)</option>
+              <option value="drive_scanner">🌲 Drive Scanner Enterprise (GreenIT & Audit)</option>
+              <option value="calendar_sync">📅 Google Calendar Automator (Batching & Alertes)</option>
+            </select>
           </div>
         </div>
 
-        <div id="ai-messages" class="ai-messages">
-          <div class="ai-message assistant">
-            👋 Bonjour ! Je suis votre copilote IA expert en <strong>Google Apps Script (V8)</strong>. Que souhaitez-vous développer ou optimiser aujourd'hui ?
+        <div class="hub-content-grid">
+          <!-- Left: Script Details Card -->
+          <div class="hub-card hub-info-card">
+            <div class="hub-info-header">
+              <span id="hub-badge-icon" class="hub-type-icon">📧</span>
+              <div>
+                <h3 id="hub-script-title" class="hub-card-title">Gmail CleanUp Pro</h3>
+                <span id="hub-script-version" class="hub-version-tag">Version v1.4.0 (V8)</span>
+              </div>
+            </div>
+            
+            <p id="hub-script-desc" class="hub-card-desc">
+              Moteur d'archivage automatique et de purge sélective des messages promotionnels et notifications volumineuses avec respect strict des quotas d'exécution.
+            </p>
+
+            <div class="hub-meta-list">
+              <div class="hub-meta-item">
+                <span class="meta-label">Runtime :</span>
+                <span id="hub-meta-runtime" class="meta-value badge-green">Google V8 ES6+</span>
+              </div>
+              <div class="hub-meta-item">
+                <span class="meta-label">Privilèges :</span>
+                <span id="hub-meta-scope" class="meta-value badge-indigo">Moindre privilège (Gmail)</span>
+              </div>
+              <div class="hub-meta-item">
+                <span class="meta-label">Quotas & Timeouts :</span>
+                <span id="hub-meta-quotas" class="meta-value badge-amber">Batching 100 threads (&lt; 6 min)</span>
+              </div>
+              <div class="hub-meta-item">
+                <span class="meta-label">Déclencheur suggéré :</span>
+                <span id="hub-meta-trigger" class="meta-value">Quotidien (Nuit, 02h00)</span>
+              </div>
+            </div>
+
+            <div class="hub-actions">
+              <button id="btn-hub-open-editor" class="btn btn-primary" title="Charger ce script dans l'Atelier Dev">
+                🚀 Ouvrir dans l'Atelier Dev
+              </button>
+              <button id="btn-hub-copy" class="btn btn-secondary" title="Copier le code dans le presse-papier">
+                📋 Copier le code
+              </button>
+            </div>
+          </div>
+
+          <!-- Right: Code Preview Card -->
+          <div class="hub-card hub-code-card">
+            <div class="code-card-header">
+              <span class="code-file-name" id="hub-preview-filename">Code.gs</span>
+              <div class="code-card-actions">
+                <span class="code-badge">JavaScript (GAS V8)</span>
+              </div>
+            </div>
+            <pre class="code-preview-block"><code id="hub-code-preview">// Chargement du script...</code></pre>
           </div>
         </div>
-      </div>
-    </aside>
-  </main>
+      </section>
 
-  <!-- Status Bar -->
+      <!-- VIEW 2: Atelier Dev & Code (Monaco Editor & Gemini Copilote) -->
+      <section id="view-editor" class="view-panel">
+        <div class="editor-shell">
+          <!-- Sidebar Explorer -->
+          <aside id="sidebar" class="sidebar">
+            <div class="sidebar-header">
+              <span>Fichiers du projet</span>
+              <div class="sidebar-actions">
+                <button id="btn-add-file" class="btn btn-ghost btn-sm" title="Nouveau fichier">+</button>
+                <button id="btn-sidebar-toggle" class="btn btn-ghost btn-sm" title="Replier l'arborescence">◧</button>
+              </div>
+            </div>
+            <ul id="file-list" class="file-list">
+              <!-- Rendu dynamique des fichiers -->
+            </ul>
+          </aside>
+
+          <!-- Monaco Editor Main Container -->
+          <section class="editor-container">
+            <div class="editor-top-bar">
+              <div id="tab-bar" class="tab-bar">
+                <!-- Onglets dynamiques des fichiers ouverts -->
+              </div>
+              <div class="editor-quick-actions">
+                <button id="btn-refresh" class="btn btn-secondary btn-xs" title="Recharger depuis Google Apps Script">
+                  🔄 Recharger
+                </button>
+                <button id="btn-sync" class="btn btn-success btn-xs" title="Pousser vers Google Apps Script (Ctrl+S)">
+                  💾 Sauvegarder & Sync
+                </button>
+                <button id="btn-ai-toggle" class="btn btn-primary btn-xs" title="Ouvrir le copilote Gemini">
+                  ✨ Assistant IA
+                </button>
+              </div>
+            </div>
+            <div id="monaco-host"></div>
+          </section>
+
+          <!-- Right AI Assistant Panel -->
+          <aside id="ai-panel" class="ai-panel">
+            <div class="ai-header">
+              <div class="ai-title">
+                <span>✨ Copilote Gemini</span>
+              </div>
+              <button id="btn-ai-close" class="btn btn-ghost btn-sm" title="Fermer le volet IA">✕</button>
+            </div>
+
+            <div class="ai-body">
+              <div class="ai-chips">
+                <button class="chip" data-action="optimize">⚡ Optimiser V8 & Quotas</button>
+                <button class="chip" data-action="audit">⏱️ Audit Timeouts (6 min)</button>
+                <button class="chip" data-action="jsdoc">📝 Générer JSDoc</button>
+                <button class="chip" data-action="trigger">⏰ Créer Déclencheur</button>
+              </div>
+
+              <div class="ai-input-box">
+                <textarea id="ai-input" class="ai-textarea" placeholder="Demandez une fonction, une optimisation, un correctif... (Ctrl+Entrée pour envoyer)"></textarea>
+                <div class="ai-input-actions">
+                  <span id="ai-current-model-tag" style="font-size: 0.72rem; color: var(--text-dim);">Google Gemini 3.8 Flash</span>
+                  <button id="btn-ai-send" class="btn btn-primary btn-sm">Envoyer ✨</button>
+                </div>
+              </div>
+
+              <div id="ai-messages" class="ai-messages">
+                <div class="ai-message assistant">
+                  👋 Bonjour ! Je suis votre copilote IA expert en <strong>Google Apps Script (V8)</strong>. Que souhaitez-vous développer ou optimiser aujourd'hui ?
+                </div>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <!-- VIEW 3: Tests & Diagnostic (Audit, Quotas, Simulateur de tests & Déclencheurs) -->
+      <section id="view-tests" class="view-panel">
+        <div class="tests-header">
+          <div>
+            <h2 class="view-title">🧪 Tests, Quotas & Validation Apps Script</h2>
+            <p class="view-desc">Auditez votre script en temps réel, vérifiez la conformité aux quotas Google Workspace et simulez l'exécution.</p>
+          </div>
+          <div class="tests-header-actions">
+            <button id="btn-run-tests" class="btn btn-primary btn-sm">
+              🔍 Lancer l'Audit du Script Actif
+            </button>
+            <button id="btn-ai-fix-script" class="btn btn-secondary btn-sm" title="Corriger les alertes avec Gemini">
+              ✨ Optimiser avec Gemini
+            </button>
+          </div>
+        </div>
+
+        <div class="tests-grid">
+          <!-- Card 1: Bilan de santé & Règles V8 -->
+          <div class="test-card">
+            <div class="test-card-header">
+              <div class="test-header-info">
+                <h3>Bilan de Santé & Conformité V8</h3>
+                <span class="sub-text">Analyse statique des anti-patterns et limites Google</span>
+              </div>
+              <div id="tests-health-badge" class="score-badge score-good">
+                <span id="tests-health-score">100</span>/100
+              </div>
+            </div>
+
+            <div id="tests-checks-container" class="checks-list">
+              <div class="check-item check-pass">
+                <span class="check-icon">✓</span>
+                <div class="check-details">
+                  <strong>Batching des Données Sheets / Drive</strong>
+                  <p>Pas d'appels unitaires <code>getValue()</code> détectés dans des boucles.</p>
+                </div>
+              </div>
+              <div class="check-item check-pass">
+                <span class="check-icon">✓</span>
+                <div class="check-details">
+                  <strong>Plafond d'Exécution (6 Minutes)</strong>
+                  <p>Traitement dimensionné avec limites de batchs appropriées.</p>
+                </div>
+              </div>
+              <div class="check-item check-pass">
+                <span class="check-icon">✓</span>
+                <div class="check-details">
+                  <strong>Syntaxe V8 Moderne (ES6+)</strong>
+                  <p>Absence de vieux mots-clés <code>var</code> (moteur Rhino obsolète).</p>
+                </div>
+              </div>
+              <div class="check-item check-pass">
+                <span class="check-icon">✓</span>
+                <div class="check-details">
+                  <strong>Résilience & Gestion d'Erreurs</strong>
+                  <p>Blocs <code>try/catch</code> présents sur les services sensibles.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 2: Simulateur d'Exécution & Console -->
+          <div class="test-card">
+            <div class="test-card-header">
+              <div class="test-header-info">
+                <h3>Simulateur d'Exécution & Logs</h3>
+                <span class="sub-text">Tester une fonction et inspecter les sorties Logger</span>
+              </div>
+              <div class="sim-controls">
+                <select id="tests-function-select" class="form-select form-select-sm">
+                  <option value="">Sélectionner une fonction...</option>
+                </select>
+                <button id="btn-run-simulation" class="btn btn-success btn-sm">▶️ Exécuter</button>
+              </div>
+            </div>
+
+            <div class="console-wrapper">
+              <div class="console-bar">
+                <span>Console Logger.log</span>
+                <button id="btn-clear-console" class="btn btn-ghost btn-xs">Vider</button>
+              </div>
+              <pre id="tests-console-output" class="console-box">// Cliquez sur "Exécuter" pour simuler l'exécution de la fonction sélectionnée...</pre>
+            </div>
+          </div>
+
+          <!-- Card 3: Générateur de Déclencheurs Automatiques (Triggers) -->
+          <div class="test-card test-card-wide">
+            <div class="test-card-header">
+              <div class="test-header-info">
+                <h3>Générateur de Déclencheurs Automatiques (Installable Triggers)</h3>
+                <span class="sub-text">Automatisez l'exécution périodique ou événementielle de votre script</span>
+              </div>
+            </div>
+
+            <div class="trigger-builder-grid">
+              <div class="trigger-form">
+                <div class="form-group">
+                  <label for="trigger-fn-select">Fonction cible :</label>
+                  <select id="trigger-fn-select" class="form-select form-select-sm">
+                    <option value="lancerNettoyageAutomatique">lancerNettoyageAutomatique</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="trigger-type-select">Type de déclencheur :</label>
+                  <select id="trigger-type-select" class="form-select form-select-sm">
+                    <option value="clock_daily">⏰ Temporel : Quotidien (heure fixe)</option>
+                    <option value="clock_hourly">⏳ Temporel : Toutes les heures</option>
+                    <option value="clock_weekly">📅 Temporel : Hebdomadaire</option>
+                    <option value="sheet_edit">📊 Événement : Modification du tableur (onEdit)</option>
+                    <option value="sheet_open">📂 Événement : Ouverture du classeur (onOpen)</option>
+                  </select>
+                </div>
+                <button id="btn-generate-trigger" class="btn btn-primary btn-sm" style="width: 100%;">
+                  ⚡ Générer le code du déclencheur
+                </button>
+              </div>
+
+              <div class="trigger-preview">
+                <div class="trigger-preview-header">
+                  <span>Code du déclencheur à injecter</span>
+                  <button id="btn-inject-trigger" class="btn btn-secondary btn-xs">
+                    📥 Insérer dans l'éditeur
+                  </button>
+                </div>
+                <pre class="trigger-code-block"><code id="trigger-code-preview">function installerDeclencheurAutomatique() {
+  ScriptApp.newTrigger('lancerNettoyageAutomatique')
+    .timeBased()
+    .everyDays(1)
+    .atHour(2)
+    .create();
+  console.info("✅ Déclencheur quotidien configuré pour 02h00.");
+}</code></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 4: Multi-Écosystèmes (Ateliers Python, SQL D1, KMP Mobile, AI Studio) -->
+      <section id="view-multidev" class="view-panel">
+        <div class="multidev-header">
+          <div>
+            <h2 class="view-title">🚀 Ateliers Multi-Écosystèmes & Générateur IA</h2>
+            <p class="view-desc">Générez instantanément du code expert pour vos modules complémentaires Python, Cloudflare D1 et Mobile KMP.</p>
+          </div>
+          
+          <!-- Subtabs -->
+          <div class="subtabs-bar">
+            <button class="subtab active" data-multidev-tab="python">
+              <span>🐍 Python & Automation</span>
+            </button>
+            <button class="subtab" data-multidev-tab="database">
+              <span>🗄️ SQL & Cloudflare D1</span>
+            </button>
+            <button class="subtab" data-multidev-tab="mobile">
+              <span>📱 Mobile KMP Lab</span>
+            </button>
+            <button class="subtab" data-multidev-tab="ai_studio">
+              <span>✨ Google AI Studio Direct</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="multidev-body">
+          <div class="multidev-prompt-card">
+            <label for="multidev-prompt-input" class="multidev-input-label">
+              <span id="multidev-tab-title">Atelier Python & Automatisation Locale</span>
+              <span class="sub-label">Décrivez votre besoin :</span>
+            </label>
+            <div class="multidev-textarea-wrap">
+              <textarea id="multidev-prompt-input" class="multidev-textarea" placeholder="Ex: Parser un fichier CSV d'export Gmail et générer un rapport JSON synthétique..."></textarea>
+              <button id="btn-multidev-generate" class="btn btn-primary btn-generate-corner">
+                <span>✨ Générer avec l'IA</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="multidev-output-card">
+            <div class="output-card-header">
+              <span id="multidev-output-title" class="output-title">Résultat généré</span>
+              <button id="btn-multidev-copy" class="btn btn-secondary btn-xs">
+                📋 Copier le code
+              </button>
+            </div>
+            <pre class="multidev-code-block"><code id="multidev-output-code"># Sélectionnez un atelier, renseignez votre consigne et cliquez sur "Générer avec l'IA"...</code></pre>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <!-- Bottom Status Bar -->
   <footer class="status-bar">
     <div class="status-left">
-      <span class="status-item">Fichier : <span id="status-file-info">--</span></span>
+      <span class="status-item">Fichier : <span id="status-file-info">Code.gs</span></span>
       <span class="status-item">Moteur : <strong>Google V8</strong></span>
+      <span class="status-item" id="active-view-indicator">Vue : <strong>Apps Script Hub</strong></span>
     </div>
     <div class="status-right">
       <span class="status-item">Raccourci : <code>Ctrl+S</code> (Sync)</span>
@@ -135,7 +477,7 @@
     </div>
   </footer>
 
-  <!-- Settings Modal -->
+  <!-- Settings & Connections Modal -->
   <div id="modal-settings" class="modal-overlay hidden">
     <div class="modal">
       <div class="modal-header">
@@ -145,7 +487,7 @@
 
       <div class="modal-body">
         <div class="callout callout-info">
-          🔒 <strong>Confidentialité garantie :</strong> Tous vos identifiants, tokens et clés API sont stockés exclusivement dans votre navigateur (sessionStorage / localStorage). Aucun serveur tiers n'y a accès.
+          🛡️ <strong>Confidentialité absolue :</strong> Tous vos identifiants, tokens et clés API sont stockés exclusivement dans votre navigateur (sessionStorage / localStorage). Aucun serveur tiers n'y a accès.
         </div>
 
         <div class="form-group">
@@ -197,10 +539,10 @@
             <button id="btn-refresh-models" class="btn btn-ghost btn-sm" style="font-size: 0.72rem;" title="Interroger Google AI Studio pour obtenir la liste en temps réel">🔄 Actualiser les modèles</button>
           </div>
           <select id="setting-gemini-model" class="form-select">
-            <option value="gemini-2.5-flash">Gemini 2.5 Flash (Recommandé — Rapide, V8 expert)</option>
+            <option value="gemini-3.8-flash">Gemini 3.8 Flash (Recommandé — Rapide, V8 expert)</option>
             <option value="gemini-2.5-pro">Gemini 2.5 Pro (Raisonnement avancé)</option>
+            <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
             <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
-            <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
           </select>
           <span id="models-status-text" class="help-text">Modèles chargés dynamiquement depuis votre compte Google AI Studio.</span>
         </div>
@@ -225,6 +567,6 @@
   <div id="toast-container" class="toast-container"></div>
 
   <!-- Main Controller Entrypoint -->
-  <script type="module" src="js/app.js?v=1.0.7"></script>
+  <script type="module" src="js/app.js?v=1.1.0"></script>
 </body>
 </html>
