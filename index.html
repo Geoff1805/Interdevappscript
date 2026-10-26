@@ -525,12 +525,16 @@
         <h4 style="font-size: 0.9rem; font-weight: 600;">2. Google AI Studio (Gemini Code Assistant)</h4>
 
         <div class="form-group">
-          <label for="setting-gemini-key">Clé API Google Gemini (Free Tier) :</label>
+          <label for="setting-gemini-key">Clé API Google Gemini (Free Tier ou Licence / Projet payant) :</label>
           <div style="display: flex; gap: 8px;">
             <input type="password" id="setting-gemini-key" class="form-input" style="flex: 1;" placeholder="Coller votre clé Gemini...">
+            <button id="btn-toggle-key-visibility" class="btn btn-secondary btn-sm" type="button" title="Afficher / Masquer la clé">👁️</button>
             <button id="btn-test-gemini" class="btn btn-secondary btn-sm">Tester</button>
           </div>
-          <span class="help-text">Obtenez gratuitement votre clé sur <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color: #818cf8;">aistudio.google.com</a>.</span>
+          <span class="help-text">
+            Obtenez votre clé sur <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color: #818cf8;">aistudio.google.com/app/apikey</a>.
+            <br>💡 <em>Compte avec licence/abonnement différent ?</em> Cliquez sur l'avatar en haut à droite sur Google AI Studio pour changer de compte, ou utilisez une fenêtre de navigation privée.
+          </span>
         </div>
 
         <div class="form-group">

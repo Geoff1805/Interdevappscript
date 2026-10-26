@@ -411,6 +411,14 @@ function synchroniserEvenementsAgenda() {
 			.getElementById("btn-test-gemini")
 			?.addEventListener("click", () => this.testGeminiConnection());
 		document
+			.getElementById("btn-toggle-key-visibility")
+			?.addEventListener("click", () => {
+				const input = document.getElementById("setting-gemini-key");
+				if (input) {
+					input.type = input.type === "password" ? "text" : "password";
+				}
+			});
+		document
 			.getElementById("btn-refresh-models")
 			?.addEventListener("click", () => this.populateGeminiModels(true));
 
