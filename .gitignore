@@ -11,3 +11,15 @@ credentials*.json
 *.secret.json
 .build.lock
 
+# Ajouté automatiquement par Sentinel (Sécurité & Secrets)
+.env.local
+*.keystore
+*.jks
+*.pem
+*.key
+*.p12
+build/
+.gradle/
+node_modules/
+__pycache__/
+*.pyc
